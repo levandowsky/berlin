@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Berlin: Techno Trip Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Berlin Techno (Deep black/slate with neon accents) -->
+    <!-- Application Structure Plan: A responsive two-column layout in a dark theme. The left column provides a persistent, clickable navigation list grouped by user-defined categories. Each category header and its corresponding items now share a color scheme and a new monospace font for better association and aesthetic fit. The right column dynamically displays location details with verified travel information and external links, including a detailed travel table for the station. -->
+    <!-- Visualization & Content Choices: Report Info (Categories) -> Goal (Organization) -> Presentation (Grouped headers and colored, monospaced text in nav) -> Interaction (Visual grouping) -> Justification (Implements user request for a clearer, color-coded structure and techno aesthetic). Report Info (Place Details) -> Goal (Full Context) -> Presentation (A large, uniquely colored link-button to the official Google Maps place page) -> Interaction (Click to open new tab) -> Justification (A robust and reliable solution). Report Info (Travel from Station) -> Goal (Planning/Navigation) -> Presentation (Detailed HTML Table) -> Justification (Implements user's specific request for a structured, multi-column breakdown of travel information). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .active-location {
+            background-color: #1e293b !important; /* slate-800 */
+            border-left-width: 4px;
+            border-color: #39ff14; /* Neon Green */
+        }
+        .font-techno {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-black text-slate-300">
+
+    <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+        
+        <header class="mb-8 text-center py-4 border-b border-slate-700">
+            <h1 class="text-4xl md:text-5xl font-black text-white uppercase tracking-widest">BERLIN</h1>
+            <p class="mt-2 text-lg text-slate-400">Kulinarny i Kulturowy Przewodnik</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            
+            <aside class="md:col-span-1 lg:col-span-1">
+                <div class="sticky top-8 bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                    <h2 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">Plan Wycieczki</h2>
+                    <nav id="locations-nav" class="flex flex-col space-y-1">
+                    </nav>
+                </div>
+            </aside>
+
+            <section id="location-details" class="md:col-span-2 lg:col-span-3 bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-xl min-h-[80vh]">
+                <div id="details-content">
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <script>
+        const categories = {
+            'PIWO': { icon: '🍺', color: 'bg-yellow-900/50', buttonColor: 'bg-yellow-500', textColor: 'text-yellow-400' },
+            'Kebab': { icon: '🥙', color: 'bg-green-900/50', buttonColor: 'bg-green-500', textColor: 'text-green-400' },
+            'Jedzenie': { icon: '🍔', color: 'bg-red-900/50', buttonColor: 'bg-red-500', textColor: 'text-red-400' },
+        };
+
+        const locations = [
+             {
+                id: 'map',
+                name: 'Mapa wszystkich miejsc',
+                category: 'special',
+                icon: '🗺️',
+                color: 'bg-indigo-900/50',
+                mapEmbedUrl: 'https://www.google.com/maps/d/embed?mid=1w04oG7_AKcDzHzMeY7q4mkSwMJeBRjU&ehbc=2E312F',
+            },
+            {
+                id: 'hotel',
+                name: 'Hotel',
+                category: 'special',
+                icon: '🏨',
+                color: 'bg-purple-900/50',
+                fullName: 'Radisson Collection Hotel',
+                address: 'Karl-Liebknecht-Str. 3, 10178 Berlin, Niemcy',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Radisson+Collection+Hotel,+Karl-Liebknecht-Str.+3,+Berlin',
+                websiteLink: 'https://www.radissonhotels.com/en-us/hotels/radisson-collection-berlin',
+                description: 'Luksusowy hotel położony w samym sercu Berlina, naprzeciwko katedry berlińskiej (Berliner Dom) i obok rzeki Szprewy. Jego centralna lokalizacja sprawia, że jest idealną bazą wypadową do zwiedzania najważniejszych atrakcji miasta, takich jak Wyspa Muzeów, Alexanderplatz czy Brama Brandenburska, które znajdują się w zasięgu krótkiego spaceru. Hotel oferuje nowocześnie urządzone pokoje i apartamenty, wiele z nich z zapierającym dech w piersiach widokiem na miasto. Goście mogą korzystać z bogatej oferty spa, centrum fitness oraz hotelowej restauracji i baru serwujących dania kuchni międzynarodowej.',
+                reviews: [
+                    '"Niesamowita lokalizacja, wszędzie można dojść pieszo. Widok z pokoju na katedrę był po prostu magiczny. Obsługa na najwyższym poziomie."',
+                    '"Mimo incydentu z akwarium, hotel przeszedł niesamowitą renowację. Czystość i design robią ogromne wrażenie. Śniadania były wyśmienite!"',
+                    '"Perfect location for exploring Berlin. The staff is incredibly attentive and the rooms are modern and comfortable. Highly recommended."',
+                    '"Świetne miejsce na pobyt w Berlinie. Blisko do wszystkich głównych atrakcji. Pokój był czysty i dobrze wyposażony. Na pewno tu wrócę."',
+                    '"The breakfast buffet is fantastic with a wide variety of choices. The hotel bar has a great atmosphere for an evening drink."'
+                ],
+                extraInfoTitle: 'Ciekawostka: Historia AquaDom',
+                extraInfo: 'W lobby tego hotelu znajdowało się kiedyś **AquaDom**, największe na świecie wolnostojące cylindryczne akwarium. W grudniu 2022 roku pękło. Hotel został odnowiony i ponownie otwarty, a wydarzenie to stało się głośną historią na całym świecie.'
+            },
+            {
+                id: 'dworzec',
+                name: 'Dworzec',
+                category: 'special',
+                icon: '🚉',
+                color: 'bg-sky-900/50',
+                fullName: 'Gesundbrunnen',
+                description: 'Ważny węzeł komunikacyjny w północnej części Berlina. Stacja obsługuje pociągi regionalne, S-Bahn i U-Bahn (linia U8), zapewniając łatwy dostęp do różnych części miasta i okolic. Wokół dworca znajduje się centrum handlowe oraz liczne sklepy i punkty usługowe.',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Gesundbrunnen+station+Berlin',
+                reviews: [],
+                travelTo: [
+                    {
+                        destination: 'Najbliższe PIWO (BrewDog)',
+                        line: 'U8',
+                        direction: 'Hermannstraße',
+                        stops: '3',
+                        travelTime: '~6 min',
+                        walkTo: '~2 min',
+                        walkFrom: '~5 min'
+                    },
+                    {
+                        destination: 'Najbliższy KEBAB (Rüyam)',
+                        line: 'U8',
+                        direction: 'Hermannstraße',
+                        stops: '2',
+                        travelTime: '~4 min',
+                        walkTo: '~2 min',
+                        walkFrom: '~5 min'
+                    },
+                    {
+                        destination: 'Najbliższe JEDZENIE (CURRY61)',
+                        line: 'U8',
+                        direction: 'Hermannstraße',
+                        stops: '6',
+                        travelTime: '~9 min',
+                        walkTo: '~2 min',
+                        walkFrom: '~6 min'
+                    },
+                     {
+                        destination: 'Hotel (Radisson Collection)',
+                        line: 'U8',
+                        direction: 'Hermannstraße',
+                        stops: '6',
+                        travelTime: '~9 min',
+                        walkTo: '~2 min',
+                        walkFrom: '~6 min'
+                    },
+                ]
+            },
+            {
+                id: 'mikkeller',
+                name: 'Mikkeller Berlin',
+                category: 'PIWO',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Mikkeller+Berlin',
+                description: 'Berlińska filia kultowego duńskiego browaru Mikkeller. Minimalistyczny, skandynawski design, przyjazna atmosfera i światowej klasy piwo na 24 kranach.',
+                recommendations: ['Piwa typu Sour (np. Spontanale)', 'Nowości i piwa sezonowe', 'Dowolne piwo w stylu IPA'],
+                reviews: ['"Świetny design i jeszcze lepsze piwo. Zawsze coś ciekawego na kranach."', '"Idealne na spokojne piwo w dobrym stylu. Trochę drożej, ale jakość to wynagradza."', '"Classic Mikkeller. Clean, minimalist design and an impeccable tap list."', '"Personel jest bardzo kompetentny i potrafi świetnie doradzić."', '"The prices are high, but you are paying for world-class, innovative beer."'],
+                travel: {
+                    walk: 'ok. 22 min (1.7 km)',
+                    transport: 'ok. 12 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U2 (kierunek Pankow), Koniec: Rosa-Luxemburg-Platz (1 przystanek)'
+                }
+            },
+            {
+                id: 'brlo',
+                name: 'BRLO Brwhouse',
+                category: 'PIWO',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=BRLO+Brwhouse+Berlin',
+                description: 'Imponujący browar i restauracja zbudowana z 38 kontenerów. Oferuje ogromny wybór własnych piw oraz menu oparte na warzywach i daniach z grilla.',
+                recommendations: ['BRLO Helles', 'BRLO Pale Ale', 'Deska degustacyjna', 'Dania warzywne z grilla'],
+                reviews: ['"Niesamowite miejsce! Design, atmosfera, piwo i jedzenie - wszystko na 10/10."', '"Jedzenie było zaskakująco dobre, zwłaszcza dania wegetariańskie."', '"Stunning architecture and a fantastic vibe. The beer selection is top-notch."', '"Architektoniczna i kulinarna perełka. Koniecznie trzeba odwiedzić."', '"The vegetable-focused food menu is a refreshing change for a brewhouse."'],
+                travel: {
+                    walk: 'ok. 41 min (3.2 km)',
+                    transport: 'ok. 21 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U2 (kierunek Ruhleben), Koniec: Gleisdreieck (6 przystanków)'
+                }
+            },
+            {
+                id: 'lemke',
+                name: 'Biermeisterei by Lemke',
+                category: 'PIWO',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Biermeisterei+by+Lemke+Berlin',
+                description: 'Jeden z pionierów sceny kraftowej w Berlinie. Lokalizacja w łukach pod torami kolejki nadaje mu wyjątkowy klimat. Szeroki wybór własnych piw.',
+                recommendations: ['Lemke Original', 'Lemke Weizen', 'Lemke IPA', 'Dania BBQ'],
+                reviews: ['"Fantastyczna lokalizacja i jeszcze lepsze piwo. Obsługa zna się na rzeczy."', '"Tradycyjne niemieckie piwa w najlepszym wydaniu. Ich Weizen jest rewelacyjny."', '"A Berlin craft beer institution. The location under the S-Bahn tracks is very atmospheric."', '"Bardzo klimatyczne miejsce z doskonałym piwem."', '"The food is solid, classic pub fare that pairs perfectly with their beers."'],
+                travel: {
+                    walk: 'ok. 6 min (500 m)',
+                    transport: 'Nieopłacalne, spacer jest szybszy.',
+                    transportDetails: ''
+                }
+            },
+             {
+                id: 'biererei',
+                name: 'Biererei Bar & Vintage Cellar',
+                category: 'PIWO',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Biererei+Bar+%26+Vintage+Cellar+Berlin',
+                description: 'Prawdziwy raj dla piwnych geeków. Niewielki bar z ogromnym wyborem piw na kranach i w butelkach. W piwnicy kryje się "Vintage Cellar" z leżakowanymi perełkami.',
+                recommendations: ['Zapytaj barmana o polecenie!', 'Piwa z sekcji "Vintage Cellar"', 'Lokalne berlińskie IPA'],
+                reviews: ['"Jeśli kochasz piwo, to jest Twoje miejsce. Selekcja jest powalająca."', '"Kameralna atmosfera i niesamowity wybór piw. Prawdziwa mekka dla birofila."', '"An absolute paradise for beer nerds. The selection is overwhelming in the best way possible."', '"Mały, ale wspaniały bar. Idealne miejsce, aby spróbować czegoś wyjątkowego."', '"The Vintage Cellar is a treasure trove for rare and aged beers."'],
+                travel: {
+                    walk: 'ok. 36 min (2.9 km)',
+                    transport: 'ok. 19 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U8 (kierunek Hermannstraße), Koniec: Kottbusser Tor (4 przystanki)'
+                }
+            },
+            {
+                id: 'brewdog',
+                name: 'BrewDog Berlin Mitte',
+                category: 'PIWO',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=BrewDog+Berlin+Mitte',
+                description: 'Duży, dwupoziomowy bar należący do słynnej szkockiej marki BrewDog. Oferuje ich klasyczne piwa, wiele piw gościnnych, smaczne jedzenie i strefę gier.',
+                recommendations: ['Punk IPA', 'Elvis Juice', 'Skrzydełka z kurczaka (lub kalafiora)', 'Dowolne piwo z kranu gościnnego'],
+                reviews: ['"Ogromny lokal z super klimatem. Można nie tylko napić się świetnego piwa, ale też zagrać w gry."', '"Duży wybór piw, nie tylko od BrewDoga. Jedzenie jest naprawdę smaczne."', '"Spacious and lively bar with a huge selection of beers. The games area is a fun bonus."', '"Fajne miejsce, zawsze coś się dzieje. Dobre piwo i dobre jedzenie."', '"The staff are always friendly and enthusiastic. A reliable choice for a fun night out."'],
+                travel: {
+                    walk: 'ok. 26 min (2.1 km)',
+                    transport: 'ok. 14 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U8 (kierunek Wittenau), Koniec: Rosenthaler Platz (2 przystanki)'
+                }
+            },
+            {
+                id: '7days',
+                name: '7 Days Original Beef & Chicken Cheesekebap',
+                category: 'Kebab',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=7+Days+Original+Beef+%26+Chicken+Cheesekebap+Berlin',
+                description: 'Miejsce, które podnosi zwykłego kebaba do rangi kulinarnego dzieła sztuki. Znani z wysokiej jakości mięsa, świeżych warzyw i domowych sosów.',
+                recommendations: ['Cheesekebap', 'Döner Dürüm', 'Wersja z sosem czosnkowym i ostrym'],
+                reviews: ['"To nie jest zwykły kebab. To jest przeżycie! Mięso jest soczyste, warzywa świeże, a sosy po prostu wymiatają."', '"Najlepszy kebab, jaki jadłem w życiu. Serio. Wszystko jest idealnie zbalansowane."', '"This is kebab artistry. The meat is tender, the bread is fresh, and the combination of sauces is just perfect."', '"Jakość, która powala. Jeśli jesteś w Berlinie, musisz tu przyjść."', '"The hype is real. It\'s more than just a kebab, it\'s a gourmet experience."'],
+                travel: {
+                    walk: 'ok. 27 min (2.2 km)',
+                    transport: 'ok. 15 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U8 (kierunek Hermannstraße), Koniec: Moritzplatz (3 przystanki)'
+                }
+            },
+            {
+                id: 'ruyam',
+                name: 'Rüyam Gemüse Kebab 2',
+                category: 'Kebab',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Rüyam+Gemüse+Kebab+2+Berlin',
+                description: 'Popularny kebab znany z obfitości świeżych, grillowanych warzyw i charakterystycznego sosu. Często wymieniany jako jeden z najlepszych w mieście.',
+                recommendations: ['Gemüse Kebab (z warzywami)', 'Hähnchen Dürüm (kebab z kurczakiem w lawaszu)'],
+                reviews: ['"Niesamowity kebab z warzywami. Zawsze świeżo i smacznie."', '"Kolejka jest długa, ale warto czekać. Jeden z najlepszych w Berlinie."', '"Fantastic vegetable kebab. The grilled vegetables add so much flavor."', '"Porcje są ogromne, można się naprawdę najeść za niewielkie pieniądze."', '"The chicken is tender and perfectly seasoned. A top-tier kebab experience."'],
+                travel: {
+                    walk: 'ok. 20 min (1.6 km)',
+                    transport: 'ok. 10 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U2 (kierunek Pankow), Koniec: Senefelderplatz (2 przystanki)'
+                }
+            },
+            {
+                id: 'mustafas',
+                name: "Mustafa's Gemüse Kebap",
+                category: 'Kebab',
+                mapLink: "https://www.google.com/maps/search/?api=1&query=Mustafa's+Gemüse+Kebap+Berlin",
+                description: 'Prawdopodobnie najsłynniejszy kebab w Berlinie, znany na całym świecie. Przygotuj się na długie oczekiwanie w kolejce, które według wielu jest tego warte.',
+                recommendations: ['Oryginalny Gemüse Kebap', 'Wersja z serem feta', 'Ajran do picia'],
+                reviews: ['"Legendarny. Po prostu trzeba spróbować, będąc w Berlinie."', '"Kolejka była szalona, ale kebab wynagrodził wszystko. Niezapomniane doznanie."', '"The most famous kebab in Berlin for a reason. It lives up to the hype."', '"Perfekcyjna kompozycja smaków. Grillowane warzywa i ser feta robią robotę."', '"An absolute must for any foodie visiting Berlin. A true icon."'],
+                travel: {
+                    walk: 'ok. 38 min (3.0 km)',
+                    transport: 'ok. 22 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U2 (kierunek Ruhleben), Koniec: Stadtmitte (4 przystanki), przesiadka na U6 (kierunek Alt-Mariendorf), Koniec: Mehringdamm (3 przystanki)'
+                }
+            },
+            {
+                id: 'dunya',
+                name: 'Dunya Gemüse Kebap',
+                category: 'Kebab',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Dunya+Gemüse+Kebap+Berlin',
+                description: 'Świetna alternatywa dla bardziej obleganych miejsc. Oferuje wysokiej jakości kebab z warzywami, często chwalony za krótsze kolejki i równie dobry smak.',
+                recommendations: ['Gemüse Kebap', 'Kebab w bułce z dodatkowym sosem ziołowym'],
+                reviews: ['"Pyszny kebab, bez gigantycznej kolejki. Super alternatywa dla Mustafy."', '"Bardzo smaczne mięso i świeże warzywa. Miła obsługa."', '"A hidden gem. Delicious kebab without the insane queue."', '"Jeden z moich ulubionych. Zawsze niezawodny i smaczny."', '"Great flavor, generous portions, and friendly service. What more could you ask for?"'],
+                travel: {
+                    walk: 'ok. 48 min (3.8 km)',
+                    transport: 'ok. 25 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: S-Bahn (S3, S5, S7, S9), Koniec: Warschauer Straße (3 przystanki)'
+                }
+            },
+            {
+                id: 'mustafascan',
+                name: "Mustafa's Can Gemüse Kebap",
+                category: 'Kebab',
+                mapLink: "https://www.google.com/maps/search/?api=1&query=Mustafa's+Can+Gemüse+Kebap+Berlin",
+                description: 'Kolejny punkt na mapie dla miłośników kebaba z warzywami. Utrzymuje wysoki standard, oferując świeże składniki i dobrze doprawione mięso.',
+                recommendations: ['Gemüse Kebap', 'Dürüm z dodatkowymi warzywami'],
+                reviews: ['"Bardzo solidny kebab. Wszystko świeże i smaczne."', '"Dobra opcja w tej okolicy. Szybka obsługa i smaczne jedzenie."', '"A very good and reliable vegetable kebab spot."', '"Nie zawiodłem się. Kebab był pyszny i sycący."', '"Nice staff and the quality of the ingredients is top."'],
+                travel: {
+                    walk: 'ok. 6 min (500 m)',
+                    transport: 'Nieopłacalne, spacer jest szybszy.',
+                    transportDetails: ''
+                }
+            },
+            {
+                id: 'curry61food',
+                name: 'CURRY61 - Alexanderplatz',
+                category: 'Jedzenie',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=CURRY+61+Alexanderplatz+Berlin',
+                description: 'Absolutny klasyk i obowiązkowy punkt dla każdego, kto chce spróbować prawdziwego berlińskiego Currywursta. Proste menu, szybka obsługa i legendarny smak.',
+                recommendations: ['Currywurst mit Pommes (z frytkami)', 'Wegański Currywurst', 'Podwójna kiełbaska dla głodnych'],
+                reviews: ['"Najlepszy Currywurst jakiego jadłem! Kiełbaska idealnie wysmażona, a sos jest mistrzostwem."', '"Idealne na szybki i sycący posiłek. Opcja z frytkami to must-have."', '"A must-try when in Berlin. The sausage is crispy and the sauce is perfect."', '"Smak, który zapamiętam na długo. Prawdziwa ikona Berlina."', '"The vegetarian option is surprisingly delicious too!"'],
+                travel: {
+                    walk: 'ok. 6 min (500 m)',
+                    transport: 'Nieopłacalne, spacer jest szybszy.',
+                    transportDetails: ''
+                }
+            },
+            {
+                id: 'slicesocietyfood',
+                name: 'Slice Society',
+                category: 'Jedzenie',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Slice+Society+Pizza+Berlin',
+                description: 'Nowoczesna pizzeria specjalizująca się w sprzedaży pizzy na kawałki. Idealne miejsce, by złapać szybki lunch w biegu.',
+                recommendations: ['Pizza z salami i ostrym miodem', 'Pizza z grzybami i pastą truflową', 'Klasyczna Margherita'],
+                reviews: ['"Pizza na kawałki jak w Nowym Jorku! Super smaczna i duży wybór."', '"Świetna opcja wegańska z truflami. Ciasto jest idealne."', '"Great variety of slices, from classic pepperoni to more creative toppings."', '"Bardzo dobra pizza, czuć, że składniki są świeże. Miła obsługa."', '"The slices are huge and very satisfying for the price."'],
+                travel: {
+                    walk: 'ok. 18 min (1.4 km)',
+                    transport: 'ok. 10 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U8 (kierunek Wittenau), Koniec: Rosenthaler Platz (2 przystanki)'
+                }
+            },
+            {
+                id: 'markthallefood',
+                name: 'Markthalle Neun',
+                category: 'Jedzenie',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Markthalle+Neun+Berlin',
+                description: 'Historyczna hala targowa, która stała się kulinarnym centrum Kreuzbergu. W czwartki odbywa się tu słynny "Street Food Thursday".',
+                recommendations: ['Odwiedzić w "Street Food Thursday"', 'Stoisko z burgerami (Kumpel & Keule)', 'Stoisko z ostrygami', 'Domowe lody'],
+                reviews: ['"Absolutnie fantastyczne miejsce! Atmosfera jest niesamowita."', '"Można tu spędzić pół dnia, próbując różnych smakołyków."', '"A vibrant and bustling market hall with an incredible selection of food."', '"Kocham to miejsce! Zawsze odkrywam tu nowe smaki."', '"It can get very crowded, but it\'s worth it for the sheer variety."'],
+                travel: {
+                    walk: 'ok. 35 min (2.8 km)',
+                    transport: 'ok. 20 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U8 (kierunek Hermannstraße), Koniec: Kottbusser Tor (4 przystanki)'
+                }
+            },
+            {
+                id: 'jagerfood',
+                name: 'Jäger & Lustig',
+                category: 'Jedzenie',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Jäger+%26+Lustig+Berlin',
+                description: 'Nowoczesna interpretacja tradycyjnej kuchni niemieckiej. Restauracja z klimatem domku myśliwskiego, serwująca dania z dziczyzny i klasyczne sznycle.',
+                recommendations: ['Sznycel Wiedeński', 'Gulasz z dzika', 'Käsespätzle (serowe kluseczki)'],
+                reviews: ['"Fantastyczne jedzenie i niesamowity wystrój! Sznycel był ogromny i pyszny."', '"Klimat tego miejsca jest wyjątkowy. Gulasz z dzika był rewelacyjny."', '"A modern take on a classic German hunting lodge. The food is rustic yet refined."', '"Idealne miejsce na kolację w wyjątkowej atmosferze."', '"The beer garden is lovely in the summer. The quality is top-notch."'],
+                 travel: {
+                    walk: 'ok. 30 min (2.4 km)',
+                    transport: 'ok. 20 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: S-Bahn (S3, S5, S7, S9), Koniec: Warschauer Straße (3 przystanki)'
+                }
+            },
+            {
+                id: 'pfefferbergfood',
+                name: 'Schankhalle Pfefferberg',
+                category: 'Jedzenie',
+                mapLink: 'https://www.google.com/maps/search/?api=1&query=Schankhalle+Pfefferberg+Berlin',
+                description: 'Browar restauracyjny mieszczący się na terenie dawnego browaru. Oferuje własne piwa oraz proste, smaczne dania idealnie pasujące do piwa.',
+                recommendations: ['Pfefferberg Pils', 'Sezonowe piwo dnia', 'Ogromny precel z serem'],
+                reviews: ['"Świetne piwo, warzone z pasją. Bardzo klimatyczne miejsce."', '"Super atmosfera, szczególnie w ogródku piwnym. Jedzenie proste, ale smaczne."', '"Great brewery with a fantastic beer garden. The industrial setting is very cool."', '"Fajne miejsce na wieczorne piwo. Luźna atmosfera."', '"The staff is knowledgeable about their beer and happy to give recommendations."'],
+                travel: {
+                    walk: 'ok. 24 min (1.9 km)',
+                    transport: 'ok. 12 min',
+                    transportDetails: 'Start: Alexanderplatz, Przejazd: U2 (kierunek Pankow), Koniec: Senefelderplatz (2 przystanki)'
+                }
+            }
+        ];
+
+        const navContainer = document.getElementById('locations-nav');
+        const detailsContainer = document.getElementById('details-content');
+
+        function displayLocation(id) {
+            const location = locations.find(loc => loc.id === id);
+            if (!location) return;
+
+            detailsContainer.innerHTML = ''; // Clear previous content
+
+            if (location.id === 'map') {
+                detailsContainer.innerHTML = `
+                     <div class="flex flex-col h-full">
+                        <h2 class="text-3xl font-bold mb-4 text-white">${location.name}</h2>
+                        <div class="flex-grow">
+                             <iframe src="${location.mapEmbedUrl}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="rounded-lg shadow-md min-h-[60vh]"></iframe>
+                        </div>
+                    </div>
+                `;
+            } else {
+                 let reviewsHtml = location.reviews && location.reviews.length > 0 ? location.reviews.map(review => `
+                    <blockquote class="border-l-4 border-slate-700 pl-4 italic text-slate-400">
+                        ${review}
+                    </blockquote>
+                `).join('') : '<p class="text-slate-400">Brak opinii dla tego miejsca.</p>';
+                
+                let recommendationsHtml = '';
+                if (location.recommendations && location.recommendations.length > 0) {
+                     recommendationsHtml = `
+                        <div class="mt-6">
+                            <h3 class="text-xl font-bold mb-4 text-white">Polecane do zamówienia</h3>
+                             <div class="flex flex-wrap gap-2">
+                                ${location.recommendations.map(item => `<span class="bg-slate-800 text-slate-300 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">${item}</span>`).join('')}
+                            </div>
+                        </div>
+                     `;
+                }
+
+                let travelHtml = '';
+                if (location.travel && location.id !== 'hotel') {
+                    travelHtml = `
+                        <div class="mt-6 border-t pt-6 border-slate-700">
+                            <h3 class="text-xl font-bold mb-4 text-white">Dojazd z Hotelu</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-slate-800 p-4 rounded-lg">
+                                    <p class="font-bold text-lg text-white">🚶‍♂️ Pieszo</p>
+                                    <p class="text-slate-400">${location.travel.walk}</p>
+                                </div>
+                                <div class="bg-slate-800 p-4 rounded-lg">
+                                    <p class="font-bold text-lg text-white">🚇 Transportem publicznym</p>
+                                    <p class="text-slate-400">${location.travel.transport || 'Brak informacji'}</p>
+                                    ${location.travel.transportDetails ? `<p class="text-sm text-slate-500 mt-1">${location.travel.transportDetails}</p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (location.travelTo) { // For Dworzec
+                     travelHtml = `
+                        <div class="mt-6 border-t pt-6 border-slate-700">
+                            <h3 class="text-xl font-bold mb-4 text-white">Dojazd z dworca do...</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead class="border-b border-slate-700 text-slate-400 text-sm">
+                                        <tr>
+                                            <th class="p-2">Cel</th>
+                                            <th class="p-2">Linia</th>
+                                            <th class="p-2">Kierunek</th>
+                                            <th class="p-2">Przystanki</th>
+                                            <th class="p-2">Czas</th>
+                                            <th class="p-2">Dojście</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${location.travelTo.map(route => `
+                                            <tr class="border-b border-slate-800">
+                                                <td class="p-2 font-semibold text-white">${route.destination}</td>
+                                                <td class="p-2 font-mono">${route.line}</td>
+                                                <td class="p-2">${route.direction}</td>
+                                                <td class="p-2">${route.stops}</td>
+                                                <td class="p-2">${route.travelTime}</td>
+                                                <td class="p-2 text-sm text-slate-400">Do: ${route.walkTo} <br> Z: ${route.walkFrom}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+
+
+                let extraInfoHtml = '';
+                if (location.extraInfoTitle && location.extraInfo) {
+                    extraInfoHtml = `
+                        <div class="mt-6">
+                            <h3 class="text-xl font-bold mb-2 text-white">${location.extraInfoTitle}</h3>
+                            <p class="text-slate-400">${location.extraInfo.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>')}</p>
+                        </div>
+                    `;
+                }
+                
+                const categoryDetails = categories[location.category];
+                const buttonColor = categoryDetails ? categoryDetails.buttonColor : 'bg-slate-500';
+                
+                const googlePlaceLinkHtml = `
+                     <div class="mb-6">
+                        <a href="${location.mapLink}" target="_blank" rel="noopener noreferrer" class="block w-full h-48 ${buttonColor} rounded-lg shadow-lg flex flex-col items-center justify-center text-white p-4 text-center hover:opacity-90 transition-opacity">
+                            <h3 class="text-3xl font-extrabold tracking-tight">${location.name}</h3>
+                            <p class="mt-2 text-lg font-medium">Zobacz opinie i zdjęcia ↗</p>
+                        </a>
+                    </div>
+                `;
+                
+                let websiteButtonHtml = '';
+                if(location.websiteLink){
+                    websiteButtonHtml = `
+                         <a href="${location.websiteLink}" target="_blank" rel="noopener noreferrer" class="ml-4 inline-block bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-600 transition-colors">
+                            Oficjalna strona hotelu
+                        </a>
+                    `;
+                }
+
+                detailsContainer.innerHTML = `
+                    <div class="flex flex-col">
+                        ${location.category !== 'special' ? googlePlaceLinkHtml : ''}
+                        <div>
+                            <h2 class="text-3xl font-bold mt-1 text-white">${location.fullName || location.name}</h2>
+                            ${location.address ? `<p class="text-slate-400 mt-2">${location.address}</p>` : ''}
+                            
+                            <p class="mt-4 text-lg text-slate-300">${location.description}</p>
+                        </div>
+
+                        ${recommendationsHtml}
+
+                        <div class="mt-6">
+                            <h3 class="text-xl font-bold mb-4 text-white">Wybrane Opinie</h3>
+                            <div class="space-y-4">
+                                ${reviewsHtml}
+                            </div>
+                        </div>
+                        
+                        ${extraInfoHtml}
+                        ${travelHtml}
+
+                         <div class="mt-8 border-t pt-6 border-slate-700">
+                             <a href="${location.mapLink}" target="_blank" rel="noopener noreferrer" class="inline-block bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-500 transition-colors">
+                                Zobacz na mapie Google
+                            </a>
+                            ${websiteButtonHtml}
+                        </div>
+
+                    </div>
+                `;
+            }
+
+            document.querySelectorAll('#locations-nav button').forEach(button => {
+                button.classList.remove('active-location');
+                if (button.dataset.id === id) {
+                    button.classList.add('active-location');
+                }
+            });
+        }
+
+        function buildNav() {
+            navContainer.innerHTML = '';
+            
+            const specialItems = locations.filter(loc => loc.category === 'special');
+            specialItems.forEach(location => {
+                 const button = document.createElement('button');
+                button.dataset.id = location.id;
+                
+                let buttonClasses = 'text-left p-3 rounded-lg transition-colors w-full focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center space-x-3';
+                button.className = `${buttonClasses} ${location.color || 'bg-slate-800/50'} hover:bg-slate-700/50`;
+
+                button.innerHTML = `
+                    <span class="text-xl">${location.icon}</span>
+                    <p class="font-semibold text-white font-techno">${location.name}</p>
+                `;
+                button.addEventListener('click', () => displayLocation(location.id));
+                navContainer.appendChild(button);
+            });
+
+            const regularLocations = locations.filter(loc => loc.category !== 'special');
+            
+            const groupedByCategory = regularLocations.reduce((acc, loc) => {
+                const category = loc.category || 'Inne';
+                if (!acc[category]) {
+                    acc[category] = [];
+                }
+                acc[category].push(loc);
+                return acc;
+            }, {});
+
+            for (const categoryName in groupedByCategory) {
+                const categoryInfo = categories[categoryName] || { icon: '📍', color: 'bg-slate-800', textColor: 'text-white' };
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = `px-3 py-2 mt-4 rounded ${categoryInfo.color} text-sm font-bold text-white flex items-center`;
+                categoryHeader.innerHTML = `<span class="mr-2 text-lg">${categoryInfo.icon}</span> ${categoryName}`;
+                navContainer.appendChild(categoryHeader);
+
+                const categoryLocations = groupedByCategory[categoryName];
+                categoryLocations.forEach(location => {
+                    const button = document.createElement('button');
+                    button.dataset.id = location.id;
+                    button.className = 'text-left p-3 rounded-lg transition-colors w-full hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-400';
+                    button.innerHTML = `
+                        <p class="font-semibold font-techno ${categoryInfo.textColor}">${location.name}</p>
+                    `;
+                    button.addEventListener('click', () => displayLocation(location.id));
+                    navContainer.appendChild(button);
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            buildNav();
+            if (locations.length > 0) {
+                displayLocation('map');
+            }
+        });
+    </script>
+</body>
+</html>
